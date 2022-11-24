@@ -48,4 +48,16 @@ public class ArtistController {
         artist = Artist.builder().name(newArtistDto.getName()).build();
         return ResponseEntity.status(HttpStatus.CREATED).body(artistRepository.save(artist));
     }
+
+    @PutMapping("/artist/{id}")
+    public ResponseEntity<Artist> eddit(@RequestBody NewArtistDto newArtistDto, @PathVariable long id) {
+        Optional<Artist> artistOpt = artistRepository.findById(id);
+        Artist artist;
+        if (artistOpt.isEmpty())
+            return ResponseEntity.notFound().build();
+
+        artist = artistOpt.get();
+        artist.setName(newArtistDto.getName());
+        return ResponseEntity.ok().body(artistRepository.save(artist));
+    }
 }
