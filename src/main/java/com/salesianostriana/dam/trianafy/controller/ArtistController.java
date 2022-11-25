@@ -3,6 +3,12 @@ package com.salesianostriana.dam.trianafy.controller;
 import com.salesianostriana.dam.trianafy.dto.NewArtistDto;
 import com.salesianostriana.dam.trianafy.model.Artist;
 import com.salesianostriana.dam.trianafy.repos.ArtistRepository;
+import com.salesianostriana.dam.trianafy.repos.SongRepository;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -16,7 +22,24 @@ import java.util.Optional;
 public class ArtistController {
 
     private final ArtistRepository artistRepository;
+    private final SongRepository songRepository;
 
+    @Operation(
+            summary = "Obtener todos los artistas",
+            description = "Esta petición devuelve una lista con todos los aristas"
+    )
+    @ApiResponses(value = {
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "La lista contiene artistas",
+                    content = {@Content(mediaType = "application/json", schema = @Schema(implementation = Artist.class))}
+            ),
+            @ApiResponse(
+                    responseCode = "404",
+                    description = "No se encontraron artistas",
+                    content = {@Content(mediaType = "application/json", schema = @Schema(implementation = Artist.class))}
+            )
+    })
     @GetMapping("/artist/")
     public ResponseEntity<List<Artist>> findAll() {
         List<Artist> artists = artistRepository.findAll();
@@ -41,8 +64,8 @@ public class ArtistController {
         if (newArtistDto.getName() == null)
             return ResponseEntity.badRequest().build();
 
-        if (artistRepository.findAll().stream().anyMatch(art -> art.getName().equals(newArtistDto.getName())))
-            return ResponseEntity.badRequest().build();
+        /*if (artistRepository.findAll().stream().anyMatch(art -> art.getName().equals(newArtistDto.getName())))
+            return ResponseEntity.badRequest().build();*/
 
 
         artist = Artist.builder().name(newArtistDto.getName()).build();
@@ -50,7 +73,7 @@ public class ArtistController {
     }
 
     @PutMapping("/artist/{id}")
-    public ResponseEntity<Artist> eddit(@RequestBody NewArtistDto newArtistDto, @PathVariable long id) {
+    public ResponseEntity<Artist> editArtist(@RequestBody NewArtistDto newArtistDto, @PathVariable Long id) {
         Optional<Artist> artistOpt = artistRepository.findById(id);
         Artist artist;
         if (artistOpt.isEmpty())
@@ -59,5 +82,14 @@ public class ArtistController {
         artist = artistOpt.get();
         artist.setName(newArtistDto.getName());
         return ResponseEntity.ok().body(artistRepository.save(artist));
+    }
+
+    @DeleteMapping("/artist/{id}")
+    public ResponseEntity<Artist> deleteArtist(@PathVariable Long id) {
+        //TODO te toca hacer la consulta para que sea más eficiente
+        //TODO arregla el find con el optional pedazo de trozo de cacho de imbécil
+        songRepository.findAll().stream().filter(song -> Optional.of(song.getArtist()).)/*.forEach(art -> art.setArtist(null))*/;
+        artistRepository.deleteById(id);
+        return ResponseEntity.noContent().build();
     }
 }
