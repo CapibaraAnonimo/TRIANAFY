@@ -9,6 +9,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @Data
 @Builder
-public class NewArtistDto {
+//TODO refactoriza el nombre
+public class EditArtistDto {
     private String name;
 }
