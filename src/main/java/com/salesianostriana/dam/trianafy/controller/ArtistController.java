@@ -12,6 +12,7 @@ import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -22,6 +23,7 @@ import java.util.Optional;
 
 @RestController
 @RequiredArgsConstructor
+@Tag(name = "Artistas", description = "Operaciones con artistas")
 public class ArtistController {
 
     private final ArtistRepository artistRepository;
@@ -133,7 +135,7 @@ public class ArtistController {
 
     @Operation(
             summary = "Editar un artista",
-            description = "Esta petición edita un  artista con los datos proporcionados"
+            description = "Esta petición edita un artista con los datos proporcionados"
     )
     @ApiResponses(value = {
             @ApiResponse(
@@ -158,14 +160,16 @@ public class ArtistController {
                 "name": "Blind Guardian"
             }
             """))) @RequestBody EditArtistDto editArtistDto, @Parameter(description = "id del artista a editar") @PathVariable Long id) {
-        Optional<Artist> artistOpt = artistRepository.findById(id);
-        Artist artist;
-        if (artistOpt.isEmpty())
+        if (!artistRepository.existsById(id))
             return ResponseEntity.notFound().build();
+        if (editArtistDto.getName() == null)
+            return ResponseEntity.badRequest().build();
 
-        artist = artistOpt.get();
-        artist.setName(editArtistDto.getName());
-        return ResponseEntity.ok().body(artistRepository.save(artist));
+        return ResponseEntity.ok().body(artistRepository.findById(id).map(artist -> {
+            artist.setName(editArtistDto.getName());
+            artistRepository.save(artist);
+            return artist;
+        }).get());
     }
 
     @Operation(
@@ -182,9 +186,13 @@ public class ArtistController {
     @DeleteMapping("/artist/{id}")
     public ResponseEntity<Artist> deleteArtist(@Parameter(description = "id del artista a eliminar") @PathVariable Long id) {
         //TODO te toca hacer la consulta para que sea más eficiente
-        songRepository.findAll().stream().filter(song -> Optional.ofNullable(song.getArtist()).isPresent()).forEach(art -> art.setArtist(null));
-        if (artistRepository.existsById(id))
+        if (artistRepository.existsById(id)) {
+            songRepository.findAll().stream().filter(song -> Optional.ofNullable(song.getArtist()).isPresent()).forEach(art -> {
+                if (art.getArtist().getId().equals(id))
+                    art.setArtist(null);
+            });
             artistRepository.deleteById(id);
+        }
         return ResponseEntity.noContent().build();
     }
 }
