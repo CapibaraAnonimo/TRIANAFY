@@ -1,6 +1,6 @@
 package com.salesianostriana.dam.trianafy.controller;
 
-import com.salesianostriana.dam.trianafy.dto.EditSongDto;
+import com.salesianostriana.dam.trianafy.dto.song.EditSongDto;
 import com.salesianostriana.dam.trianafy.model.Song;
 import com.salesianostriana.dam.trianafy.repos.PlaylistRepository;
 import com.salesianostriana.dam.trianafy.repos.SongRepository;
@@ -23,7 +23,7 @@ import java.util.Optional;
 
 @RestController
 @RequiredArgsConstructor
-@Tag(name = "Canciones", description = "Operaciones con Canciones")
+@Tag(name = "Canciones", description = "Operaciones con canciones")
 public class SongController {
 
     private final SongRepository songRepository;
@@ -153,7 +153,7 @@ public class SongController {
             }
             """))) @RequestBody EditSongDto editSongDto) {
         Song song;
-        if (editSongDto.getTitle() == null && editSongDto.getAlbum() == null && editSongDto.getYear() == null && editSongDto.getArtist() == null)
+        if (editSongDto.getTitle() == null || editSongDto.getAlbum() == null || editSongDto.getYear() == null || editSongDto.getArtist() == null)
             return ResponseEntity.badRequest().build();
         song = Song.builder().title(editSongDto.getTitle()).album(editSongDto.getAlbum()).year(editSongDto.getYear()).artist(editSongDto.getArtist()).build();
         return ResponseEntity.status(HttpStatus.CREATED).body(songRepository.save(song));
@@ -189,7 +189,6 @@ public class SongController {
     @PutMapping("/song/{id}")
     public ResponseEntity<Song> editSong(@io.swagger.v3.oas.annotations.parameters.RequestBody(description = "Datos necesarios para la edición de una canción", content = @Content(examples = @ExampleObject("""
             {
-                "id": 5,
                 "title": "Donde habita el olvido",
                 "album": "19 días y 500 noches",
                 "year": "1999",
@@ -199,6 +198,10 @@ public class SongController {
                 }
             }
             """))) @RequestBody EditSongDto editSongDto, @Parameter(description = "id de la canción a editar") @PathVariable Long id) {
+
+        if (editSongDto.getTitle() == null || editSongDto.getAlbum() == null || editSongDto.getYear() == null || editSongDto.getArtist() == null)
+            return ResponseEntity.badRequest().build();
+
         if (!songRepository.existsById(id))
             return ResponseEntity.notFound().build();
 
