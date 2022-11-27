@@ -1,4 +1,4 @@
-package com.salesianostriana.dam.trianafy.dto;
+package com.salesianostriana.dam.trianafy.dto.playlist;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -9,6 +9,8 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @Data
 @Builder
-public class EditArtistDto {
+public class NewPlaylistRequestDto {
     private String name;
+
+    private String description;
 }

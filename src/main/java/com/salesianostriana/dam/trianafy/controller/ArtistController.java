@@ -1,6 +1,6 @@
 package com.salesianostriana.dam.trianafy.controller;
 
-import com.salesianostriana.dam.trianafy.dto.EditArtistDto;
+import com.salesianostriana.dam.trianafy.dto.artist.EditArtistDto;
 import com.salesianostriana.dam.trianafy.model.Artist;
 import com.salesianostriana.dam.trianafy.repos.ArtistRepository;
 import com.salesianostriana.dam.trianafy.repos.SongRepository;
@@ -151,6 +151,11 @@ public class ArtistController {
             @ApiResponse(
                     responseCode = "404",
                     description = "Artista no encontrado",
+                    content = {@Content()}
+            ),
+            @ApiResponse(
+                    responseCode = "400",
+                    description = "Id incorrecto",
                     content = {@Content()}
             )
     })
