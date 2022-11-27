@@ -152,6 +152,11 @@ public class ArtistController {
                     responseCode = "404",
                     description = "Artista no encontrado",
                     content = {@Content()}
+            ),
+            @ApiResponse(
+                    responseCode = "400",
+                    description = "Id incorrecto",
+                    content = {@Content()}
             )
     })
     @PutMapping("/artist/{id}")

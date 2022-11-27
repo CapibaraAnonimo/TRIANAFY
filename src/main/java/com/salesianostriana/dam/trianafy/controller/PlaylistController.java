@@ -2,7 +2,9 @@ package com.salesianostriana.dam.trianafy.controller;
 
 import com.salesianostriana.dam.trianafy.dto.playlist.*;
 import com.salesianostriana.dam.trianafy.model.Playlist;
+import com.salesianostriana.dam.trianafy.model.Song;
 import com.salesianostriana.dam.trianafy.repos.PlaylistRepository;
+import com.salesianostriana.dam.trianafy.repos.SongRepository;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
@@ -26,6 +28,7 @@ import java.util.Optional;
 public class PlaylistController {
 
     private final PlaylistRepository playlistRepository;
+    private final SongRepository songRepository;
 
     private final AllPlaylistsDtoMapper allPlaylistsDtoMapper;
     private final OnePlaylistDtoMapper onePlaylistDtoMapper;
@@ -102,10 +105,10 @@ public class PlaylistController {
             )
     })
     @GetMapping("/list/{id}")
-    public ResponseEntity<OnePlaylistDto> findById(@Parameter(description = "id del la canción a buscar") @PathVariable Long id) {
+    public ResponseEntity<OnePlaylistDto> findById(@Parameter(description = "id del la lista a buscar") @PathVariable Long id) {
         Optional<Playlist> playlist = playlistRepository.findById(id);
         if (playlist.isPresent())
-            return ResponseEntity.ok().body(onePlaylistDtoMapper.PlaylistToOnePlaylistDto(playlist.get()));
+            return ResponseEntity.ok().body(onePlaylistDtoMapper.playlistToOnePlaylistDto(playlist.get()));
         else
             return ResponseEntity.notFound().build();
     }
@@ -155,7 +158,7 @@ public class PlaylistController {
     @ApiResponses(value = {
             @ApiResponse(
                     responseCode = "200",
-                    description = "Se editó la canción",
+                    description = "Se editó la lista",
                     content = {@Content(mediaType = "application/json", schema = @Schema(implementation = AllPlaylistsDto.class), examples = @ExampleObject("""
                             {
                                 "id": 12,
@@ -176,7 +179,7 @@ public class PlaylistController {
             )
     })
     @PutMapping("/list/{id}")
-    public ResponseEntity<AllPlaylistsDto> editList(@io.swagger.v3.oas.annotations.parameters.RequestBody(description = "Datos necesarios para la edición de una canción", content = @Content(examples = @ExampleObject("""
+    public ResponseEntity<AllPlaylistsDto> editList(@io.swagger.v3.oas.annotations.parameters.RequestBody(description = "Datos necesarios para la edición de una lista", content = @Content(examples = @ExampleObject("""
             {
                 "name": "Random",
                 "description": "Una lista muy loca"
@@ -209,5 +212,178 @@ public class PlaylistController {
             playlistRepository.deleteById(id);
 
         return ResponseEntity.noContent().build();
+    }
+
+    @Operation(
+            summary = "Obtener todas las canciones de una playlist",
+            description = "Esta petición devuelve todas las canciones de la playlist con el id indicado"
+    )
+    @ApiResponses(value = {
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "Se encontró la playlist",
+                    content = {@Content(mediaType = "application/json", schema = @Schema(implementation = OnePlaylistDto.class), examples = @ExampleObject("""
+                            {
+                                "id": 12,
+                                "name": "Random",
+                                "description": "Una lista muy loca",
+                                "songs": [
+                                    {
+                                        "id": 9,
+                                        "title": "Enter Sandman",
+                                        "artist": "Metallica",
+                                        "album": "Metallica",
+                                        "year": "1991"
+                                    },
+                                    {
+                                        "id": 8,
+                                        "title": "Love Again",
+                                        "artist": "Dua Lipa",
+                                        "album": "Future Nostalgia",
+                                        "year": "2021"
+                                    }
+                                ]
+                            }
+                            """))}
+            ),
+            @ApiResponse(
+                    responseCode = "404",
+                    description = "No se encontró la playlist",
+                    content = {@Content()}
+            )
+    })
+    @GetMapping("/list/{id}/song")
+    public ResponseEntity<OnePlaylistDto> findAllSongsByListId(@Parameter(description = "id del la lista a buscar") @PathVariable Long id) {
+        if (playlistRepository.existsById(id))
+            return ResponseEntity.ok().body(onePlaylistDtoMapper.playlistToOnePlaylistDto(playlistRepository.findById(id).get()));
+        else
+            return ResponseEntity.notFound().build();
+    }
+
+    @Operation(
+            summary = "Obtener una canción de una lista",
+            description = "Esta petición devuelve la canción con el id indicado de la lista con id indicado"
+    )
+    @ApiResponses(value = {
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "Se encontró la canción de la playlist",
+                    content = {@Content(mediaType = "application/json", schema = @Schema(implementation = Song.class), examples = @ExampleObject("""
+                                {
+                                    "id": 5,
+                                    "title": "Donde habita el olvido",
+                                    "album": "19 días y 500 noches",
+                                    "year": "1999",
+                                    "artist": {
+                                         "id": 1,
+                                         "name": "Joaquín Sabina"
+                                    }
+                                }
+                            """))}
+            ),
+            @ApiResponse(
+                    responseCode = "404",
+                    description = "No se encontró la canción o la playlist",
+                    content = {@Content()}
+            )
+    })
+    @GetMapping("/list/{idList}/song/{idSong}")
+    public ResponseEntity<Song> findSongOfListById(@Parameter(description = "id del la lista a buscar") @PathVariable Long idList, @Parameter(description = "id del la canción a buscar") @PathVariable Long idSong) {
+        Playlist playlist;
+        Song song;
+        if (playlistRepository.existsById(idList) && songRepository.existsById(idSong)) {
+            playlist = playlistRepository.findById(idList).get();
+            song = songRepository.findById(idSong).get();
+            if (playlist.getSongs().contains(song))
+                return ResponseEntity.ok().body(song);
+            else
+                return ResponseEntity.notFound().build();
+        } else
+            return ResponseEntity.notFound().build();
+    }
+
+    @Operation(
+            summary = "Añade una canción a una lista",
+            description = "Esta petición añade una canción existente a una playlist"
+    )
+    @ApiResponses(value = {
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "Se añadió la canción",
+                    content = {@Content(mediaType = "application/json", schema = @Schema(implementation = OnePlaylistDto.class), examples = @ExampleObject("""
+                            {
+                                "id": 12,
+                                "name": "Random",
+                                "description": "Una lista muy loca",
+                                "songs": [
+                                    {
+                                        "id": 9,
+                                        "title": "Enter Sandman",
+                                        "artist": "Metallica",
+                                        "album": "Metallica",
+                                        "year": "1991"
+                                    },
+                                    {
+                                        "id": 8,
+                                        "title": "Love Again",
+                                        "artist": "Dua Lipa",
+                                        "album": "Future Nostalgia",
+                                        "year": "2021"
+                                    }
+                                ]
+                            }
+                            """))}
+            ),
+            @ApiResponse(
+                    responseCode = "400",
+                    description = "Ids inválidos para añadir una canción a una playlist",
+                    content = {@Content()}
+            )
+    })
+    @PostMapping("/list/{idList}/song/{idSong}") //TODO si la canción ya está en la lista lanza badRequest
+    public ResponseEntity<OnePlaylistDto> addSongToList(@Parameter(description = "id del la lista a buscar") @PathVariable Long idList, @Parameter(description = "id del la canción a buscar") @PathVariable Long idSong) {
+        Playlist playlist;
+        if (playlistRepository.existsById(idList) && songRepository.existsById(idSong)) {
+            playlist = playlistRepository.findById(idList).get();
+            playlist.addSong(songRepository.findById(idSong).get());
+            return ResponseEntity.ok().body(onePlaylistDtoMapper.playlistToOnePlaylistDto(playlist));
+        } else
+            return ResponseEntity.notFound().build();
+    }
+
+    @Operation(
+            summary = "Elimina canción de una playlist",
+            description = "Esta petición elimina una canción de una playlist que contenga el id indicado"
+    )
+    @ApiResponses(value = {
+            @ApiResponse(
+                    responseCode = "204",
+                    description = "No existe la canción en la playlist indicada",
+                    content = {@Content()}
+            ),
+            @ApiResponse(
+                    responseCode = "404",
+                    description = "No existe la playlist",
+                    content = {@Content()}
+            )
+    })
+    @DeleteMapping("/list/{idList}/song/{idSong}")
+    public ResponseEntity<Playlist> deleteSongFromList(@Parameter(description = "id del la lista a buscar") @PathVariable Long idList, @Parameter(description = "id del la canción a buscar") @PathVariable Long idSong) {
+        Playlist playlist;
+        Optional<Song> song;
+        if (playlistRepository.existsById(idList)) {
+            do {
+                playlist = playlistRepository.findById(idList).get();
+                song = songRepository.findById(idSong);
+
+                if (song.isPresent()) {
+                    song.ifPresent(playlist::deleteSong);
+                    playlistRepository.save(playlist);
+                }
+            } while (playlist.getSongs().contains(song.get()));
+
+            return ResponseEntity.noContent().build();
+        } else
+            return ResponseEntity.notFound().build();
     }
 }

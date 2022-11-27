@@ -184,6 +184,11 @@ public class SongController {
                     responseCode = "404",
                     description = "Canción no encontrada",
                     content = {@Content()}
+            ),
+            @ApiResponse(
+                    responseCode = "400",
+                    description = "Id invalido",
+                    content = {@Content()}
             )
     })
     @PutMapping("/song/{id}")
@@ -226,7 +231,7 @@ public class SongController {
                     content = {@Content()}
             )
     })
-    @DeleteMapping("/song/{id}")
+    @DeleteMapping("/song/{id}") //TODO con el número nueve explota
     public ResponseEntity<Song> deleteSong(@Parameter(description = "id de la canción a eliminar") @PathVariable Long id) {
         if (songRepository.existsById(id)) {
             playlistRepository.findAll().forEach(playlist -> playlist.deleteSong(songRepository.findById(id).get()));

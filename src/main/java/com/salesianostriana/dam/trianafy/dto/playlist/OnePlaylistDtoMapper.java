@@ -9,7 +9,7 @@ import org.springframework.stereotype.Component;
 public class OnePlaylistDtoMapper {
     private final PlaylistSongDtoMapper playlistSongDtoMapper;
 
-    public OnePlaylistDto PlaylistToOnePlaylistDto(Playlist playlist) {
+    public OnePlaylistDto playlistToOnePlaylistDto(Playlist playlist) {
         return OnePlaylistDto.builder().id(playlist.getId()).name(playlist.getName()).description(playlist.getDescription()).songs(playlist.getSongs().stream().map(playlistSongDtoMapper::songToPlaylistSongDto).toList()).build();
     }
 }
