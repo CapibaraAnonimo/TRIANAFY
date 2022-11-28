@@ -336,17 +336,28 @@ public class PlaylistController {
             ),
             @ApiResponse(
                     responseCode = "400",
-                    description = "Ids inválidos para añadir una canción a una playlist",
+                    description = "No se puede añadir dos veces la misma canción",
+                    content = {@Content()}
+            ),
+            @ApiResponse(
+                    responseCode = "404",
+                    description = "No se encontraron la lista o la canción",
                     content = {@Content()}
             )
     })
-    @PostMapping("/list/{idList}/song/{idSong}") //TODO si la canción ya está en la lista lanza badRequest
+    @PostMapping("/list/{idList}/song/{idSong}")
     public ResponseEntity<OnePlaylistDto> addSongToList(@Parameter(description = "id del la lista a buscar") @PathVariable Long idList, @Parameter(description = "id del la canción a buscar") @PathVariable Long idSong) {
         Playlist playlist;
+        Song song;
         if (playlistRepository.existsById(idList) && songRepository.existsById(idSong)) {
             playlist = playlistRepository.findById(idList).get();
-            playlist.addSong(songRepository.findById(idSong).get());
-            return ResponseEntity.ok().body(onePlaylistDtoMapper.playlistToOnePlaylistDto(playlist));
+            song = songRepository.findById(idSong).get();
+            if (!playlist.getSongs().contains(song)) {
+                playlist.addSong(song);
+                playlistRepository.save(playlist);
+                return ResponseEntity.ok().body(onePlaylistDtoMapper.playlistToOnePlaylistDto(playlist));
+            } else
+                return ResponseEntity.badRequest().build();
         } else
             return ResponseEntity.notFound().build();
     }
