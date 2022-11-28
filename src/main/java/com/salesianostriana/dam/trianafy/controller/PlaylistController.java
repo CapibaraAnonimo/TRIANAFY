@@ -335,11 +335,6 @@ public class PlaylistController {
                             """))}
             ),
             @ApiResponse(
-                    responseCode = "400",
-                    description = "No se puede añadir dos veces la misma canción",
-                    content = {@Content()}
-            ),
-            @ApiResponse(
                     responseCode = "404",
                     description = "No se encontraron la lista o la canción",
                     content = {@Content()}
@@ -351,13 +346,9 @@ public class PlaylistController {
         Song song;
         if (playlistRepository.existsById(idList) && songRepository.existsById(idSong)) {
             playlist = playlistRepository.findById(idList).get();
-            song = songRepository.findById(idSong).get();
-            if (!playlist.getSongs().contains(song)) {
-                playlist.addSong(song);
-                playlistRepository.save(playlist);
-                return ResponseEntity.ok().body(onePlaylistDtoMapper.playlistToOnePlaylistDto(playlist));
-            } else
-                return ResponseEntity.badRequest().build();
+            playlist.addSong(songRepository.findById(idSong).get());
+            playlistRepository.save(playlist);
+            return ResponseEntity.ok().body(onePlaylistDtoMapper.playlistToOnePlaylistDto(playlist));
         } else
             return ResponseEntity.notFound().build();
     }
