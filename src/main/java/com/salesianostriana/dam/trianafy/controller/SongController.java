@@ -4,6 +4,8 @@ import com.salesianostriana.dam.trianafy.dto.song.EditSongDto;
 import com.salesianostriana.dam.trianafy.model.Song;
 import com.salesianostriana.dam.trianafy.repos.PlaylistRepository;
 import com.salesianostriana.dam.trianafy.repos.SongRepository;
+import com.salesianostriana.dam.trianafy.service.PlaylistService;
+import com.salesianostriana.dam.trianafy.service.SongService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
@@ -26,8 +28,9 @@ import java.util.Optional;
 @Tag(name = "Canciones", description = "Operaciones con canciones")
 public class SongController {
 
+    private final SongService songService;
     private final SongRepository songRepository;
-    private final PlaylistRepository playlistRepository;
+    private final PlaylistService playlistService;
 
     @Operation(
             summary = "Obtener todas las canciones",
@@ -70,7 +73,7 @@ public class SongController {
     })
     @GetMapping("/song/")
     public ResponseEntity<List<Song>> findAll() {
-        List<Song> songs = songRepository.findAll();
+        List<Song> songs = songService.findAll();
         if (!songs.isEmpty())
             return ResponseEntity.ok().body(songs);
         else
@@ -106,7 +109,7 @@ public class SongController {
     })
     @GetMapping("/song/{id}")
     public ResponseEntity<Song> findById(@Parameter(description = "id del la canción a buscar") @PathVariable Long id) {
-        Optional<Song> song = songRepository.findById(id);
+        Optional<Song> song = songService.findById(id);
         if (song.isPresent())
             return ResponseEntity.ok().body(song.get());
         else
@@ -156,7 +159,7 @@ public class SongController {
         if (editSongDto.getTitle() == null || editSongDto.getAlbum() == null || editSongDto.getYear() == null || editSongDto.getArtist() == null)
             return ResponseEntity.badRequest().build();
         song = Song.builder().title(editSongDto.getTitle()).album(editSongDto.getAlbum()).year(editSongDto.getYear()).artist(editSongDto.getArtist()).build();
-        return ResponseEntity.status(HttpStatus.CREATED).body(songRepository.save(song));
+        return ResponseEntity.status(HttpStatus.CREATED).body(songService.add(song));
     }
 
     @Operation(
@@ -210,12 +213,12 @@ public class SongController {
         if (!songRepository.existsById(id))
             return ResponseEntity.notFound().build();
 
-        return ResponseEntity.ok().body(songRepository.findById(id).map(song -> {
+        return ResponseEntity.ok().body(songService.findById(id).map(song -> {
             song.setTitle(editSongDto.getTitle());
             song.setAlbum(editSongDto.getAlbum());
             song.setYear(editSongDto.getYear());
             song.setArtist(editSongDto.getArtist());
-            songRepository.save(song);
+            songService.edit(song);
             return song;
         }).get());
     }
@@ -234,8 +237,8 @@ public class SongController {
     @DeleteMapping("/song/{id}") //TODO con el número nueve explota
     public ResponseEntity<Song> deleteSong(@Parameter(description = "id de la canción a eliminar") @PathVariable Long id) {
         if (songRepository.existsById(id)) {
-            playlistRepository.findAll().forEach(playlist -> playlist.deleteSong(songRepository.findById(id).get()));
-            songRepository.deleteById(id);
+            playlistService.findAll().forEach(playlist -> playlist.deleteSong(songService.findById(id).get()));
+            songService.deleteById(id);
         }
         return ResponseEntity.noContent().build();
     }

@@ -4,6 +4,8 @@ import com.salesianostriana.dam.trianafy.dto.artist.EditArtistDto;
 import com.salesianostriana.dam.trianafy.model.Artist;
 import com.salesianostriana.dam.trianafy.repos.ArtistRepository;
 import com.salesianostriana.dam.trianafy.repos.SongRepository;
+import com.salesianostriana.dam.trianafy.service.ArtistService;
+import com.salesianostriana.dam.trianafy.service.SongService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
@@ -26,8 +28,9 @@ import java.util.Optional;
 @Tag(name = "Artistas", description = "Operaciones con artistas")
 public class ArtistController {
 
+    private final ArtistService artistService;
     private final ArtistRepository artistRepository;
-    private final SongRepository songRepository;
+    private final SongService songService;
 
     @Operation(
             summary = "Obtener todos los artistas",
@@ -62,7 +65,7 @@ public class ArtistController {
     })
     @GetMapping("/artist/")
     public ResponseEntity<List<Artist>> findAll() {
-        List<Artist> artists = artistRepository.findAll();
+        List<Artist> artists = artistService.findAll();
         if (!artists.isEmpty())
             return ResponseEntity.ok().body(artists);
         else
@@ -92,7 +95,7 @@ public class ArtistController {
     })
     @GetMapping("/artist/{id}")
     public ResponseEntity<Artist> findById(@Parameter(description = "id del artista a buscar") @PathVariable Long id) {
-        Optional<Artist> artist = artistRepository.findById(id);
+        Optional<Artist> artist = artistService.findById(id);
         if (artist.isPresent())
             return ResponseEntity.ok().body(artist.get());
         else
@@ -130,7 +133,7 @@ public class ArtistController {
         if (editArtistDto.getName() == null)
             return ResponseEntity.badRequest().build();
         artist = Artist.builder().name(editArtistDto.getName()).build();
-        return ResponseEntity.status(HttpStatus.CREATED).body(artistRepository.save(artist));
+        return ResponseEntity.status(HttpStatus.CREATED).body(artistService.add(artist));
     }
 
     @Operation(
@@ -170,9 +173,9 @@ public class ArtistController {
         if (editArtistDto.getName() == null)
             return ResponseEntity.badRequest().build();
 
-        return ResponseEntity.ok().body(artistRepository.findById(id).map(artist -> {
+        return ResponseEntity.ok().body(artistService.findById(id).map(artist -> {
             artist.setName(editArtistDto.getName());
-            artistRepository.save(artist);
+            artistService.edit(artist);
             return artist;
         }).get());
     }
@@ -192,11 +195,12 @@ public class ArtistController {
     public ResponseEntity<Artist> deleteArtist(@Parameter(description = "id del artista a eliminar") @PathVariable Long id) {
         //TODO te toca hacer la consulta para que sea más eficiente
         if (artistRepository.existsById(id)) {
-            songRepository.findAll().stream().filter(song -> Optional.ofNullable(song.getArtist()).isPresent()).forEach(art -> {
+            //songRepository.findSongsOfArtist(id).forEach(song -> song.setArtist(null));
+            songService.findAll().stream().filter(song -> Optional.ofNullable(song.getArtist()).isPresent()).forEach(art -> {
                 if (art.getArtist().getId().equals(id))
                     art.setArtist(null);
             });
-            artistRepository.deleteById(id);
+            artistService.deleteById(id);
         }
         return ResponseEntity.noContent().build();
     }

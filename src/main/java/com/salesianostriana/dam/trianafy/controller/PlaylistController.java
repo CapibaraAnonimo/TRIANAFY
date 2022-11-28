@@ -5,6 +5,8 @@ import com.salesianostriana.dam.trianafy.model.Playlist;
 import com.salesianostriana.dam.trianafy.model.Song;
 import com.salesianostriana.dam.trianafy.repos.PlaylistRepository;
 import com.salesianostriana.dam.trianafy.repos.SongRepository;
+import com.salesianostriana.dam.trianafy.service.PlaylistService;
+import com.salesianostriana.dam.trianafy.service.SongService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
@@ -27,7 +29,9 @@ import java.util.Optional;
 @Tag(name = "Listas de reproducción", description = "Operaciones con listas de reproducción")
 public class PlaylistController {
 
+    private final PlaylistService playlistService;
     private final PlaylistRepository playlistRepository;
+    private final SongService songService;
     private final SongRepository songRepository;
 
     private final AllPlaylistsDtoMapper allPlaylistsDtoMapper;
@@ -59,7 +63,7 @@ public class PlaylistController {
     })
     @GetMapping("/list/")
     public ResponseEntity<List<AllPlaylistsDto>> findAll() {
-        List<AllPlaylistsDto> allPlaylistsDtos = playlistRepository.findAll().stream().map(allPlaylistsDtoMapper::PlaylistToAllPlaylistsDto).toList();
+        List<AllPlaylistsDto> allPlaylistsDtos = playlistService.findAll().stream().map(allPlaylistsDtoMapper::PlaylistToAllPlaylistsDto).toList();
         if (!allPlaylistsDtos.isEmpty())
             return ResponseEntity.ok().body(allPlaylistsDtos);
         else
@@ -106,7 +110,7 @@ public class PlaylistController {
     })
     @GetMapping("/list/{id}")
     public ResponseEntity<OnePlaylistDto> findById(@Parameter(description = "id del la lista a buscar") @PathVariable Long id) {
-        Optional<Playlist> playlist = playlistRepository.findById(id);
+        Optional<Playlist> playlist = playlistService.findById(id);
         if (playlist.isPresent())
             return ResponseEntity.ok().body(onePlaylistDtoMapper.playlistToOnePlaylistDto(playlist.get()));
         else
@@ -147,7 +151,7 @@ public class PlaylistController {
             return ResponseEntity.badRequest().build();
 
         playlist = Playlist.builder().name(newPlaylistRequestDto.getName()).description(newPlaylistRequestDto.getDescription()).build();
-        playlistRepository.save(playlist);
+        playlistService.add(playlist);
         return ResponseEntity.status(HttpStatus.CREATED).body(NewPlaylistResponseDto.builder().id(playlist.getId()).name(playlist.getName()).description(playlist.getDescription()).build());
     }
 
@@ -191,8 +195,8 @@ public class PlaylistController {
         if (!playlistRepository.existsById(id))
             return ResponseEntity.notFound().build();
 
-        playlistRepository.save(Playlist.builder().id(id).name(editPlaylistRequestDto.getName()).description(editPlaylistRequestDto.getDescription()).songs(playlistRepository.findById(id).get().getSongs()).build());
-        return ResponseEntity.ok().body(AllPlaylistsDto.builder().id(id).name(editPlaylistRequestDto.getName()).numberOfSongs((long) playlistRepository.findById(id).get().getSongs().size()).build());
+        playlistService.edit(Playlist.builder().id(id).name(editPlaylistRequestDto.getName()).description(editPlaylistRequestDto.getDescription()).songs(playlistService.findById(id).get().getSongs()).build());
+        return ResponseEntity.ok().body(AllPlaylistsDto.builder().id(id).name(editPlaylistRequestDto.getName()).numberOfSongs((long) playlistService.findById(id).get().getSongs().size()).build());
     }
 
     @Operation(
@@ -209,7 +213,7 @@ public class PlaylistController {
     @DeleteMapping("/list/{id}")
     public ResponseEntity<Playlist> deleteList(@Parameter(description = "id de la playlist a eliminar") @PathVariable Long id) {
         if (playlistRepository.existsById(id))
-            playlistRepository.deleteById(id);
+            playlistService.deleteById(id);
 
         return ResponseEntity.noContent().build();
     }
@@ -255,7 +259,7 @@ public class PlaylistController {
     @GetMapping("/list/{id}/song")
     public ResponseEntity<OnePlaylistDto> findAllSongsByListId(@Parameter(description = "id del la lista a buscar") @PathVariable Long id) {
         if (playlistRepository.existsById(id))
-            return ResponseEntity.ok().body(onePlaylistDtoMapper.playlistToOnePlaylistDto(playlistRepository.findById(id).get()));
+            return ResponseEntity.ok().body(onePlaylistDtoMapper.playlistToOnePlaylistDto(playlistService.findById(id).get()));
         else
             return ResponseEntity.notFound().build();
     }
@@ -292,8 +296,8 @@ public class PlaylistController {
         Playlist playlist;
         Song song;
         if (playlistRepository.existsById(idList) && songRepository.existsById(idSong)) {
-            playlist = playlistRepository.findById(idList).get();
-            song = songRepository.findById(idSong).get();
+            playlist = playlistService.findById(idList).get();
+            song = songService.findById(idSong).get();
             if (playlist.getSongs().contains(song))
                 return ResponseEntity.ok().body(song);
             else
@@ -343,11 +347,10 @@ public class PlaylistController {
     @PostMapping("/list/{idList}/song/{idSong}")
     public ResponseEntity<OnePlaylistDto> addSongToList(@Parameter(description = "id del la lista a buscar") @PathVariable Long idList, @Parameter(description = "id del la canción a buscar") @PathVariable Long idSong) {
         Playlist playlist;
-        Song song;
         if (playlistRepository.existsById(idList) && songRepository.existsById(idSong)) {
-            playlist = playlistRepository.findById(idList).get();
-            playlist.addSong(songRepository.findById(idSong).get());
-            playlistRepository.save(playlist);
+            playlist = playlistService.findById(idList).get();
+            playlist.addSong(songService.findById(idSong).get());
+            playlistService.edit(playlist);
             return ResponseEntity.ok().body(onePlaylistDtoMapper.playlistToOnePlaylistDto(playlist));
         } else
             return ResponseEntity.notFound().build();
@@ -375,12 +378,12 @@ public class PlaylistController {
         Optional<Song> song;
         if (playlistRepository.existsById(idList)) {
             do {
-                playlist = playlistRepository.findById(idList).get();
-                song = songRepository.findById(idSong);
+                playlist = playlistService.findById(idList).get();
+                song = songService.findById(idSong);
 
                 if (song.isPresent()) {
                     song.ifPresent(playlist::deleteSong);
-                    playlistRepository.save(playlist);
+                    playlistService.edit(playlist);
                 }
             } while (playlist.getSongs().contains(song.get()));
 
