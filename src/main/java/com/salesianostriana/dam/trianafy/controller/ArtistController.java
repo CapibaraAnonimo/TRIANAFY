@@ -3,7 +3,6 @@ package com.salesianostriana.dam.trianafy.controller;
 import com.salesianostriana.dam.trianafy.dto.artist.EditArtistDto;
 import com.salesianostriana.dam.trianafy.model.Artist;
 import com.salesianostriana.dam.trianafy.repos.ArtistRepository;
-import com.salesianostriana.dam.trianafy.repos.SongRepository;
 import com.salesianostriana.dam.trianafy.service.ArtistService;
 import com.salesianostriana.dam.trianafy.service.SongService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -195,7 +194,6 @@ public class ArtistController {
     public ResponseEntity<Artist> deleteArtist(@Parameter(description = "id del artista a eliminar") @PathVariable Long id) {
         //TODO te toca hacer la consulta para que sea más eficiente
         if (artistRepository.existsById(id)) {
-            //songRepository.findSongsOfArtist(id).forEach(song -> song.setArtist(null));
             songService.findAll().stream().filter(song -> Optional.ofNullable(song.getArtist()).isPresent()).forEach(art -> {
                 if (art.getArtist().getId().equals(id))
                     art.setArtist(null);
