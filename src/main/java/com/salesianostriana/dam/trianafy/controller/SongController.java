@@ -2,7 +2,6 @@ package com.salesianostriana.dam.trianafy.controller;
 
 import com.salesianostriana.dam.trianafy.dto.song.EditSongDto;
 import com.salesianostriana.dam.trianafy.model.Song;
-import com.salesianostriana.dam.trianafy.repos.PlaylistRepository;
 import com.salesianostriana.dam.trianafy.repos.SongRepository;
 import com.salesianostriana.dam.trianafy.service.PlaylistService;
 import com.salesianostriana.dam.trianafy.service.SongService;
@@ -234,7 +233,7 @@ public class SongController {
                     content = {@Content()}
             )
     })
-    @DeleteMapping("/song/{id}") //TODO con el número nueve explota
+    @DeleteMapping("/song/{id}")
     public ResponseEntity<Song> deleteSong(@Parameter(description = "id de la canción a eliminar") @PathVariable Long id) {
         if (songRepository.existsById(id)) {
             playlistService.findAll().forEach(playlist -> playlist.deleteSong(songService.findById(id).get()));
