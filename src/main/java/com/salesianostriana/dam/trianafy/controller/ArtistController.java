@@ -1,6 +1,7 @@
 package com.salesianostriana.dam.trianafy.controller;
 
-import com.salesianostriana.dam.trianafy.dto.artist.EditArtistDto;
+import com.fasterxml.jackson.annotation.JsonView;
+import com.salesianostriana.dam.trianafy.dto.artist.Views;
 import com.salesianostriana.dam.trianafy.model.Artist;
 import com.salesianostriana.dam.trianafy.repos.ArtistRepository;
 import com.salesianostriana.dam.trianafy.repos.SongRepository;
@@ -62,6 +63,7 @@ public class ArtistController {
                     content = {@Content()}
             )
     })
+    @JsonView(Views.Artist.class)
     @GetMapping("/artist/")
     public ResponseEntity<List<Artist>> findAll() {
         List<Artist> artists = artistService.findAll();
@@ -92,6 +94,7 @@ public class ArtistController {
                     content = {@Content()}
             )
     })
+    @JsonView(Views.Artist.class)
     @GetMapping("/artist/{id}")
     public ResponseEntity<Artist> findById(@Parameter(description = "id del artista a buscar") @PathVariable Long id) {
         Optional<Artist> artist = artistService.findById(id);
@@ -122,12 +125,13 @@ public class ArtistController {
                     content = {@Content()}
             )
     })
+    @JsonView(Views.Artist.class)
     @PostMapping("/artist/")
     public ResponseEntity<Artist> addArtist(@io.swagger.v3.oas.annotations.parameters.RequestBody(description = "Datos necesarios para la creación de un nuevo artista", content = @Content(examples = @ExampleObject("""
             {
                 "name": "Blind Guardian"
             }
-            """))) @RequestBody EditArtistDto editArtistDto) {
+            """))) @JsonView(Views.EditArtist.class) @RequestBody Artist editArtistDto) {
         Artist artist;
         if (editArtistDto.getName() == null)
             return ResponseEntity.badRequest().build();
@@ -161,12 +165,13 @@ public class ArtistController {
                     content = {@Content()}
             )
     })
+    @JsonView(Views.Artist.class)
     @PutMapping("/artist/{id}")
     public ResponseEntity<Artist> editArtist(@io.swagger.v3.oas.annotations.parameters.RequestBody(description = "Datos necesarios para la edición de un artista", content = @Content(examples = @ExampleObject("""
             {
                 "name": "Blind Guardian"
             }
-            """))) @RequestBody EditArtistDto editArtistDto, @Parameter(description = "id del artista a editar") @PathVariable Long id) {
+            """))) @JsonView(Views.EditArtist.class) @RequestBody Artist editArtistDto, @Parameter(description = "id del artista a editar") @PathVariable Long id) {
         if (!artistRepository.existsById(id))
             return ResponseEntity.notFound().build();
         if (editArtistDto.getName() == null)
@@ -190,6 +195,7 @@ public class ArtistController {
                     content = {@Content()}
             )
     })
+    @JsonView(Views.Artist.class)
     @DeleteMapping("/artist/{id}")
     public ResponseEntity<Artist> deleteArtist(@Parameter(description = "id del artista a eliminar") @PathVariable Long id) {
         if (artistRepository.existsById(id)) {
