@@ -1,18 +1,15 @@
 package com.salesianostriana.dam.trianafy.model;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import javax.persistence.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 @Entity
-@NoArgsConstructor
-@AllArgsConstructor
-@Data
+@NoArgsConstructor @AllArgsConstructor
+@Getter @Setter
 @Builder
 public class Playlist {
 
@@ -37,5 +34,16 @@ public class Playlist {
         songs.remove(song);
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Playlist playlist = (Playlist) o;
+        return id.equals(playlist.id);
+    }
 
+    @Override
+    public int hashCode() {
+        return Objects.hash(id);
+    }
 }
