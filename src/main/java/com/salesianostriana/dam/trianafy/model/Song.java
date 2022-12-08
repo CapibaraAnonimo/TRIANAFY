@@ -21,7 +21,7 @@ public class Song {
     private String year;
 
     @ManyToOne(fetch = FetchType.EAGER)
-    private Song song;
+    private Artist artist;
 
     @Override
     public boolean equals(Object o) {
