@@ -1,17 +1,16 @@
 package com.salesianostriana.dam.trianafy.model;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import javax.persistence.*;
 
 @Entity
 @NoArgsConstructor
 @AllArgsConstructor
-@Data
+@Getter
+@Setter
 @Builder
+@ToString
 public class Song {
 
     @Id
@@ -23,7 +22,7 @@ public class Song {
     @Column(name = "year_of_song")
     private String year;
 
-    @ManyToOne(fetch = FetchType.EAGER)
+    @ManyToOne()
     private Artist artist;
 
 

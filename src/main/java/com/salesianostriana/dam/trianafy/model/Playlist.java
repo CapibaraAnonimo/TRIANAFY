@@ -1,9 +1,6 @@
 package com.salesianostriana.dam.trianafy.model;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import javax.persistence.*;
 import java.util.ArrayList;
@@ -12,8 +9,21 @@ import java.util.List;
 @Entity
 @NoArgsConstructor
 @AllArgsConstructor
-@Data
+@Getter
+@Setter
 @Builder
+@ToString
+@NamedEntityGraph
+        (name = "playlist-addedTo",
+                attributeNodes = {
+                        @NamedAttributeNode(value = "addedTo",
+                                subgraph = "addedTo-songs")
+                }, subgraphs = {
+                @NamedSubgraph(name = "addedTo-songs",
+                        attributeNodes = {
+                                @NamedAttributeNode("song")
+                        })
+        })
 public class Playlist {
 
     @Id
@@ -24,18 +34,16 @@ public class Playlist {
 
     private String description;
 
-    @ManyToMany(fetch = FetchType.EAGER)
+    @OneToMany(fetch = FetchType.EAGER, cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
-    private List<Song> songs = new ArrayList<>();
+    private List<AddedTo> addedTo = new ArrayList<>();
 
 
-    public void addSong(Song song) {
-        songs.add(song);
+    public void addSong(AddedTo song) {
+        addedTo.add(song);
     }
 
-    public void deleteSong(Song song) {
-        songs.remove(song);
+    public void deleteSong(AddedTo song) {
+        addedTo.remove(song);
     }
-
-
 }
