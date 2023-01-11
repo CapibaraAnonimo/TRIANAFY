@@ -36,6 +36,7 @@ public class Playlist {
 
     @OneToMany(fetch = FetchType.EAGER, cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
+    @OrderColumn(name = "playlistOrder")
     private List<AddedTo> addedTo = new ArrayList<>();
 
 

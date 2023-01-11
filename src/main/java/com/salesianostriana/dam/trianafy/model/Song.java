@@ -11,6 +11,15 @@ import javax.persistence.*;
 @Setter
 @Builder
 @ToString
+@NamedEntityGraph
+        (name = "artist-song",
+                attributeNodes = {
+                        @NamedAttributeNode(value = "artist",
+                                subgraph = "addedTo")
+                }, subgraphs = @NamedSubgraph(
+                        name = "addedTo",
+                attributeNodes =
+        ))
 public class Song {
 
     @Id
